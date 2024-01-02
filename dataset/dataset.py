@@ -48,11 +48,34 @@ def get_dataset(args):
             normalize,
         ])
 
+        #Chưa rõ chỗ này
         train_dataset = ICH(root, "train", train_transform)
         test_dataset = ICH(root, "test", val_transform)
 
     else:
-        exit("Error: unrecognized dataset")
+        root = "your path"
+        args.n_classes = 10
+
+        train_transform = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])],
+        )
+        val_transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])],
+        )
+
+        train_dataset = ICH(root, "train", train_transform)
+        test_dataset = ICH(root, "test", val_transform)
+        #dataset_train = datasets.CIFAR10(data_path, train=True, download=True, transform=trans_train)
+        #dataset_test = datasets.CIFAR10(data_path, train=False, download=True, transform=trans_val)
+        #n_train = len(dataset_train)
+        #y_train = np.array(dataset_train.targets)
+        #exit("Error: unrecognized dataset")
 
     n_train = len(train_dataset)
     y_train = np.array(train_dataset.targets)
