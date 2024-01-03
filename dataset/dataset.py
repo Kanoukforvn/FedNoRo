@@ -32,7 +32,7 @@ def get_dataset(args):
 
 
     elif args.dataset == "ICH":
-        root = "your path"
+        root = "/kaggle/input/rsna-intracranial-hemorrhage-detection/rsna-intracranial-hemorrhage-detection"
         args.n_classes = 5
 
         normalize = transforms.Normalize([0.485, 0.456, 0.406],
