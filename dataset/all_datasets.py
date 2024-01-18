@@ -42,7 +42,7 @@ class ICH(Dataset):
         assert self.mode in ["train", "test"]
         self.transform = transform
 
-        csv_file = os.path.join(self.root, self.mode+".csv")
+        csv_file = os.path.join(self.root, "stage_2_"+self.mode+".csv")
         self.file = pd.read_csv(csv_file)
         self.images = self.file["id"].values
         self.labels = self.file.iloc[:, 1:].values.astype("int")
