@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 
-from .all_datasets import isic2019, ICH
+from .all_datasets import isic2019, ICH, CIFAR10
 
 from utils.sampling import iid_sampling, non_iid_dirichlet_sampling
 
