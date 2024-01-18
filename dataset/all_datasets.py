@@ -90,8 +90,8 @@ class CIFAR10(Dataset):
         img = self.transform(img)
         return img, target
 
-    # def read_image(self, id):
-    #     image_path = os.path.join(self.root, "stage_1_train_images", id+".png")
-    #     image = Image.open(image_path).convert("RGB")
-    #     return image
+    def read_image(self, id):
+        image_path = os.path.join(self.root, "stage_1_train_images", id+".png")
+        image = Image.open(image_path).convert("RGB")
+        return image
 
