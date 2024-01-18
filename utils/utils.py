@@ -79,7 +79,7 @@ def add_noise(args, y_train, dict_users):
 
     else:
         raise NotImplementedError
-    logging.info(y_train_noisy)
+    #logging.info(y_train_noisy)
     return (y_train_noisy, gamma_s, real_noise_level)
 
 
