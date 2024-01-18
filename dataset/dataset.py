@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-import torchvision.transforms as transforms
-
+#import torchvision.transforms as transforms
+from torchvision import datasets, transforms
 from .all_datasets import isic2019, ICH, CIFAR10
 
 from utils.sampling import iid_sampling, non_iid_dirichlet_sampling
@@ -53,7 +53,7 @@ def get_dataset(args):
         test_dataset = ICH(root, "test", val_transform)
 
     else:
-        root = "/kaggle/input/cifar10-python/cifar-10-batches-py"
+        root = "./data/cifar10"
         args.n_classes = 10
         args.model = 'Resnet18'
         train_transform = transforms.Compose([
@@ -70,8 +70,8 @@ def get_dataset(args):
         )
 
        
-        train_dataset = CIFAR10(root, "train", transform=train_transform)
-        test_dataset = CIFAR10(root, "test", transform=val_transform)
+        train_dataset = datasets.CIFAR10(root, train=True, download=True, transform=train_transform)
+        test_dataset = datasets.CIFAR10(root, train=True, download=True, transform=val_transform)
         # n_train = len(dataset_train)
         # y_train = np.array(dataset_train.targets)
 
