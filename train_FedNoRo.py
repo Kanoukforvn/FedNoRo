@@ -50,8 +50,7 @@ if __name__ == '__main__':
 
     # --------------------- Add Noise ---------------------------
     y_train = np.array(dataset_train.targets)
-    y_train_noisy, gamma_s, real_noise_level = add_noise(
-        args, y_train, dict_users)
+    y_train_noisy, gamma_s, real_noise_level = add_noise(args, y_train, dict_users)
     dataset_train.targets = y_train_noisy
 
     # --------------------- Build Models ---------------------------
