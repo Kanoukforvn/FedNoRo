@@ -70,8 +70,8 @@ def get_dataset(args):
         )
 
        
-        train_dataset = CIFAR10(root, train=True, download=True, transform=train_transform)
-        test_dataset = CIFAR10(root, train=False, download=True, transform=val_transform)
+        train_dataset = CIFAR10(root, "train", transform=train_transform)
+        test_dataset = CIFAR10(root, "test", transform=val_transform)
         # n_train = len(dataset_train)
         # y_train = np.array(dataset_train.targets)
 
