@@ -53,9 +53,9 @@ def get_dataset(args):
         test_dataset = ICH(root, "test", val_transform)
 
     else:
-        root = "your path"
+        root = "/kaggle/input/cifar10-python/cifar-10-batches-py"
         args.n_classes = 10
-
+        args.model = 'Resnet18'
         train_transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -69,13 +69,11 @@ def get_dataset(args):
                                  std=[0.229, 0.224, 0.225])],
         )
 
-        train_dataset = ICH(root, "train", train_transform)
-        test_dataset = ICH(root, "test", val_transform)
-        #dataset_train = datasets.CIFAR10(data_path, train=True, download=True, transform=trans_train)
-        #dataset_test = datasets.CIFAR10(data_path, train=False, download=True, transform=trans_val)
-        #n_train = len(dataset_train)
-        #y_train = np.array(dataset_train.targets)
-        #exit("Error: unrecognized dataset")
+       
+        train_dataset = datasets.CIFAR10(data_path, train=True, download=True, transform=train_transform)
+        test_dataset = datasets.CIFAR10(data_path, train=False, download=True, transform=val_transform)
+        # n_train = len(dataset_train)
+        # y_train = np.array(dataset_train.targets)
 
     n_train = len(train_dataset)
     y_train = np.array(train_dataset.targets)
