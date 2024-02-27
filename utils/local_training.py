@@ -11,7 +11,7 @@ from utils.losses import LogitAdjust, LA_KD
 
 def globaltest(net, test_dataset, args):
     net.eval()
-    test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
     pred = np.array([])
     with torch.no_grad():
         for images, labels in test_loader:
@@ -21,7 +21,6 @@ def globaltest(net, test_dataset, args):
             _, predicted = torch.max(outputs.data, 1)
             pred = np.concatenate([pred, predicted.detach().cpu().numpy()], axis=0)
     return pred
-
 
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
@@ -42,8 +41,6 @@ class DatasetSplit(Dataset):
             class_sum[label] += 1
         return class_sum.tolist()
 
-
-
 class LocalUpdate(object):
     def __init__(self, args, id, dataset, idxs):
         self.args = args
@@ -51,10 +48,11 @@ class LocalUpdate(object):
         self.idxs = idxs
         self.local_dataset = DatasetSplit(dataset, idxs)
         self.class_num_list = self.local_dataset.get_num_of_each_class(self.args)
-        logging.info(
-            f'client{id} each class num: {self.class_num_list}, total: {len(self.local_dataset)}')
+        # logging.info(
+        #     f'client{id} each class num: {self.class_num_list}, total: {len(self.local_dataset)}')
         self.ldr_train = DataLoader(
-            self.local_dataset, batch_size=self.args.batch_size, shuffle=True, num_workers=4)
+            self.local_dataset, batch_size=self.args.batch_size, shuffle=True, 
+            num_workers=2, drop_last=True)
         self.epoch = 0
         self.iter_num = 0
         self.lr = self.args.base_lr
@@ -63,8 +61,9 @@ class LocalUpdate(object):
     def train_LA(self, net, writer):
         net.train()
         # set the optimizer
-        self.optimizer = torch.optim.Adam(
-            net.parameters(), lr=self.lr, betas=(0.9, 0.999), weight_decay=5e-4)
+        # self.optimizer = torch.optim.Adam(
+        #     net.parameters(), lr=self.lr, betas=(0.9, 0.999), weight_decay=5e-4)
+        self.optimizer = torch.optim.SGD(net.parameters(), lr=self.lr, momentum=0.5)
 
         # train and update
         epoch_loss = []
@@ -72,12 +71,13 @@ class LocalUpdate(object):
         for epoch in range(self.args.local_ep):
             batch_loss = []
             for (_, images, labels) in self.ldr_train:
-                images, labels = images.to(self.args.device), labels.cuda().to(self.args.device)
-
+                images, labels = images.to(self.args.device), labels.to(self.args.device)
+                
+                labels = labels.long()
+                self.optimizer.zero_grad()
                 logits = net(images)
                 loss = ce_criterion(logits, labels)
 
-                self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
@@ -95,8 +95,9 @@ class LocalUpdate(object):
         student_net.train()
         teacher_net.eval()
         # set the optimizer
-        self.optimizer = torch.optim.Adam(
-            student_net.parameters(), lr=self.lr, betas=(0.9, 0.999), weight_decay=5e-4)
+        # self.optimizer = torch.optim.Adam(
+        #     student_net.parameters(), lr=self.lr, betas=(0.9, 0.999), weight_decay=5e-4)
+        self.optimizer = torch.optim.SGD(student_net.parameters(), lr=self.lr, momentum=0.5)
 
         # train and update
         epoch_loss = []
@@ -107,6 +108,7 @@ class LocalUpdate(object):
             for (img_idx, images, labels) in self.ldr_train:
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
 
+                self.optimizer.zero_grad()
                 logits = student_net(images)
                 with torch.no_grad():
                     teacher_output = teacher_net(images)
@@ -114,7 +116,6 @@ class LocalUpdate(object):
 
                 loss = criterion(logits, labels, soft_label, weight_kd)
 
-                self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
