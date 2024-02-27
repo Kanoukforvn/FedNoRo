@@ -8,72 +8,27 @@ from utils.sampling import iid_sampling, non_iid_dirichlet_sampling
 
 
 def get_dataset(args):
-    if args.dataset == "isic2019":
-        root = "your path"
-        args.n_classes = 8
+    root = "./data/cifar10"
+    args.n_classes = 10
+    args.model = 'Resnet18'
+    train_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])],
+    )
+    val_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])],
+    )
 
-        normalize = transforms.Normalize([0.485, 0.456, 0.406],
-                                         [0.229, 0.224, 0.225])
-        train_transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.RandomAffine(degrees=10, translate=(0.02, 0.02)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize,
-        ])
-        val_transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            normalize,
-        ])
-
-        train_dataset = isic2019(root, "train", train_transform)
-        test_dataset = isic2019(root, "test", val_transform)
-
-
-    elif args.dataset == "ICH":
-        root = "/kaggle/input/rsna-intracranial-hemorrhage-detection/rsna-intracranial-hemorrhage-detection"
-        args.n_classes = 5
-
-        normalize = transforms.Normalize([0.485, 0.456, 0.406],
-                                         [0.229, 0.224, 0.225])
-        train_transform = transforms.Compose([
-            transforms.RandomAffine(degrees=10, translate=(0.02, 0.02)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize,
-        ])
-        val_transform = transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])
-
-        #Chưa rõ chỗ này
-        train_dataset = ICH(root, "train", train_transform)
-        test_dataset = ICH(root, "test", val_transform)
-
-    else:
-        root = "./data/cifar10"
-        args.n_classes = 10
-        args.model = 'Resnet18'
-        train_transform = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])],
-        )
-        val_transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])],
-        )
-
-       
-        train_dataset = datasets.CIFAR10(root, train=True, download=True, transform=train_transform)
-        test_dataset = datasets.CIFAR10(root, train=True, download=True, transform=val_transform)
-        # n_train = len(dataset_train)
-        # y_train = np.array(dataset_train.targets)
+   
+    train_dataset = datasets.CIFAR10(root, train=True, download=True, transform=train_transform)
+    test_dataset = datasets.CIFAR10(root, train=True, download=True, transform=val_transform)
+    # n_train = len(dataset_train)
+    # y_train = np.array(dataset_train.targets)
 
     n_train = len(train_dataset)
     y_train = np.array(train_dataset.targets)
