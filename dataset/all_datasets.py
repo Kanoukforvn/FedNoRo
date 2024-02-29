@@ -78,7 +78,7 @@ class CIFAR10(Dataset):
         self.labels = self.file.iloc[:, 1:].values.astype("int")
         self.targets = np.argmax(self.labels, axis=1)
         self.n_classes = len(np.unique(self.targets))
-        assert self.n_classes == 5
+        assert self.n_classes == 10
 
     def __len__(self):
         return len(self.targets)
