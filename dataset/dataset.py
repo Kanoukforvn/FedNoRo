@@ -34,10 +34,11 @@ def get_dataset(args):
     y_train = np.array(train_dataset.targets)
     assert n_train == len(y_train)
 
-    if args.iid:
-        dict_users = iid_sampling(n_train, args.n_clients, args.seed)
-    else:
-        dict_users = non_iid_dirichlet_sampling(y_train, args.n_classes, args.non_iid_prob_class, args.n_clients, seed=100, alpha_dirichlet=args.alpha_dirichlet)
+    dict_users = non_iid_dirichlet_sampling(y_train, args.n_classes, args.non_iid_prob_class, args.n_clients, seed=100, alpha_dirichlet=args.alpha_dirichlet)
+    # if args.iid:
+    #     dict_users = iid_sampling(n_train, args.n_clients, args.seed)
+    # else:
+    #     dict_users = non_iid_dirichlet_sampling(y_train, args.n_classes, args.non_iid_prob_class, args.n_clients, seed=100, alpha_dirichlet=args.alpha_dirichlet)
 
     # check
     assert len(dict_users.keys()) == args.n_clients
