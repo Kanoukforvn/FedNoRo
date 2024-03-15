@@ -10,7 +10,7 @@ from utils.sampling import iid_sampling, non_iid_dirichlet_sampling
 def get_dataset(args):
     root = "./data/cifar10"
     args.n_classes = 10
-    args.model = 'Resnet18'
+    # args.model = 'Resnet18'
     train_transform = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
