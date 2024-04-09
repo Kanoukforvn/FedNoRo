@@ -118,6 +118,7 @@ class LocalUpdate(object):
                 
                 self.optimizer.zero_grad()
                 loss = loss.float()
+                print(loss.dtype)
                 loss.backward()
                 self.optimizer.step()
 
