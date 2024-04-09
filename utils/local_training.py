@@ -117,6 +117,7 @@ class LocalUpdate(object):
                 loss = criterion(logits, labels, soft_label, weight_kd)
                 
                 self.optimizer.zero_grad()
+                loss = loss.float()
                 loss.backward()
                 self.optimizer.step()
 
