@@ -113,7 +113,8 @@ class LocalUpdate(object):
                     soft_label = torch.softmax(teacher_output/0.8, dim=1)
 
                 loss = criterion(logits, labels, soft_label, weight_kd)
-
+                loss = float(loss)
+                
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
