@@ -14,14 +14,19 @@ import torch.nn.functional as F
 from sklearn.metrics import balanced_accuracy_score
 
 
+import numpy as np
+import pandas as pd
+import copy
+import logging
+
 def add_noise(args, y_train, dict_users):
     np.random.seed(args.seed)
     gamma_s = np.array([0.] * args.num_users)
-    gamma_s[:int(args.level_n_system*args.num_users)] = 1.
+    gamma_s[:int(args.level_n_system * args.num_users)] = 1.
     np.random.shuffle(gamma_s)
     gamma_c_initial = np.random.rand(args.num_users)
     gamma_c_initial = (args.level_n_upperb - args.level_n_lowerb) * \
-        gamma_c_initial + args.level_n_lowerb
+                      gamma_c_initial + args.level_n_lowerb
     gamma_c = gamma_s * gamma_c_initial
     y_train_noisy = copy.deepcopy(y_train)
 
@@ -33,7 +38,7 @@ def add_noise(args, y_train, dict_users):
         else:
             raise
 
-        soft_label = df.iloc[:, 1:args.n_classes+1].values.astype("float")
+        soft_label = df.iloc[:, 1:args.n_classes + 1].values.astype("float")
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
             sample_idx = np.array(list(dict_users[i]))
@@ -44,15 +49,15 @@ def add_noise(args, y_train, dict_users):
                 soft_label_this_client.shape[0]), hard_label_this_client])
             p_f = 1 - p_t
             p_f = p_f / p_f.sum()
-            # Choose noisy samples base on the misclassification probability.
+            # Choose noisy samples based on the misclassification probability.
             noisy_idx = np.random.choice(np.arange(len(sample_idx)), size=int(
-                gamma_c[i]*len(sample_idx)), replace=False, p=p_f)
+                gamma_c[i] * len(sample_idx)), replace=False, p=p_f)
 
             for j in noisy_idx:
                 soft_label_this_client[j][hard_label_this_client[j]] = 0.
                 soft_label_this_client[j] = soft_label_this_client[j] / \
-                    soft_label_this_client[j].sum()
-                # Choose a noisy label base on the classification probability.
+                                            soft_label_this_client[j].sum()
+                # Choose a noisy label based on the classification probability.
                 # The noisy label is different from the initial label.
                 y_train_noisy[sample_idx[j]] = np.random.choice(
                     np.arange(args.n_classes), p=soft_label_this_client[j])
@@ -77,22 +82,7 @@ def add_noise(args, y_train, dict_users):
                 i, gamma_c[i], gamma_c[i] * 0.9, noise_ratio))
             real_noise_level[i] = noise_ratio
 
-    elif args.n_type == "symmetric":  # Add symmetric noise here
-        real_noise_level = np.zeros(args.num_users)
-        for i in np.where(gamma_c > 0)[0]:
-            sample_idx = np.array(list(dict_users[i]))
-            prob = np.random.rand(len(sample_idx))
-            noisy_idx = np.where(prob <= gamma_c[i])[0]
-            for idx in noisy_idx:
-                y_train_noisy[sample_idx[idx]] = np.random.choice(
-                    np.delete(np.arange(args.n_classes), y_train[sample_idx[idx]]))
-            noise_ratio = np.mean(
-                y_train[sample_idx] != y_train_noisy[sample_idx])
-            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
-                i, gamma_c[i], noise_ratio))
-            real_noise_level[i] = noise_ratio
-
-    elif args.n_type == "asymmetric":  # Add asymmetric noise here
+    elif args.n_type == "asymmetric":
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
             sample_idx = np.array(list(dict_users[i]))
@@ -115,10 +105,28 @@ def add_noise(args, y_train, dict_users):
                 i, gamma_c[i], noise_ratio))
             real_noise_level[i] = noise_ratio
 
+    elif args.n_type == "symmetric":  # Add symmetric noise here
+        real_noise_level = np.zeros(args.num_users)
+        for i in np.where(gamma_c > 0)[0]:
+            sample_idx = np.array(list(dict_users[i]))
+            prob = np.random.rand(len(sample_idx))
+            noisy_idx = np.where(prob <= gamma_c[i])[0]
+            # Introduce symmetric noise by flipping labels randomly
+            for idx in noisy_idx:
+                correct_label = y_train[sample_idx[idx]]
+                other_labels = np.delete(np.arange(args.n_classes), correct_label)
+                noisy_label = np.random.choice(other_labels)
+                y_train_noisy[sample_idx[idx]] = noisy_label
+            noise_ratio = np.mean(
+                y_train[sample_idx] != y_train_noisy[sample_idx])
+            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
+                i, gamma_c[i], noise_ratio))
+            real_noise_level[i] = noise_ratio
+
     else:
         raise NotImplementedError
-    #logging.info(y_train_noisy)
-    return (y_train_noisy, gamma_s, real_noise_level)
+
+    return y_train_noisy, gamma_s, real_noise_level
 
 
 def sigmoid_rampup(current, begin, end):
