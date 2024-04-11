@@ -191,7 +191,7 @@ if __name__ == '__main__':
             best_performance = bacc
         logging.info(f'best bacc: {best_performance}, now bacc: {bacc}')
         logging.info('\n')
-    torch.save(netglob.state_dict(),  models_dir+'f/stage2_model_{rnd}.pth')
+    torch.save(netglob.state_dict(), models_dir + f'stage2_model_{rnd}.pth')
 
     BACC = np.array(BACC)
     logging.info("last:")
