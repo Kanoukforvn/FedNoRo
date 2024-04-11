@@ -77,6 +77,44 @@ def add_noise(args, y_train, dict_users):
                 i, gamma_c[i], gamma_c[i] * 0.9, noise_ratio))
             real_noise_level[i] = noise_ratio
 
+    elif args.n_type == "symmetric":  # Add symmetric noise here
+        real_noise_level = np.zeros(args.num_users)
+        for i in np.where(gamma_c > 0)[0]:
+            sample_idx = np.array(list(dict_users[i]))
+            prob = np.random.rand(len(sample_idx))
+            noisy_idx = np.where(prob <= gamma_c[i])[0]
+            for idx in noisy_idx:
+                y_train_noisy[sample_idx[idx]] = np.random.choice(
+                    np.delete(np.arange(args.n_classes), y_train[sample_idx[idx]]))
+            noise_ratio = np.mean(
+                y_train[sample_idx] != y_train_noisy[sample_idx])
+            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
+                i, gamma_c[i], noise_ratio))
+            real_noise_level[i] = noise_ratio
+
+    elif args.n_type == "asymmetric":  # Add asymmetric noise here
+        real_noise_level = np.zeros(args.num_users)
+        for i in np.where(gamma_c > 0)[0]:
+            sample_idx = np.array(list(dict_users[i]))
+            soft_label_this_client = np.ones((len(sample_idx), args.n_classes)) * \
+                                     (1 / args.n_classes)  # Initializing with uniform distribution
+
+            # Introducing asymmetric noise
+            for j in range(len(sample_idx)):
+                # Choose a noisy label based on the misclassification probability.
+                noisy_label = np.random.choice(np.arange(args.n_classes), p=[0.9, 0.1])  # Example: 90% for correct label, 10% for other labels
+                soft_label_this_client[j][noisy_label] = 0.
+                soft_label_this_client[j] = soft_label_this_client[j] / \
+                                            soft_label_this_client[j].sum()
+                y_train_noisy[sample_idx[j]] = np.random.choice(
+                    np.arange(args.n_classes), p=soft_label_this_client[j])
+
+            noise_ratio = np.mean(
+                y_train[sample_idx] != y_train_noisy[sample_idx])
+            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
+                i, gamma_c[i], noise_ratio))
+            real_noise_level[i] = noise_ratio
+
     else:
         raise NotImplementedError
     #logging.info(y_train_noisy)
