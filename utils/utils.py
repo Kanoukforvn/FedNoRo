@@ -92,7 +92,9 @@ def add_noise(args, y_train, dict_users):
             # Introducing asymmetric noise
             for j in range(len(sample_idx)):
                 # Choose a noisy label based on the misclassification probability.
-                noisy_label = np.random.choice(np.arange(args.n_classes), p=[0.9, 0.1])  # Example: 90% for correct label, 10% for other labels
+                label_prob = np.ones(args.n_classes) * 0.1
+                label_prob[y_train[sample_idx[j]]] = 0.9
+                noisy_label = np.random.choice(np.arange(args.n_classes), p=label_prob)
                 soft_label_this_client[j][noisy_label] = 0.
                 soft_label_this_client[j] = soft_label_this_client[j] / \
                                             soft_label_this_client[j].sum()
@@ -105,6 +107,7 @@ def add_noise(args, y_train, dict_users):
                 i, gamma_c[i], noise_ratio))
             real_noise_level[i] = noise_ratio
 
+            
     elif args.n_type == "symmetric":  # Add symmetric noise here
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
