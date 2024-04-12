@@ -20,6 +20,33 @@ import copy
 import logging
 from typing import List, Dict
 
+def subclasses_transmat(subclass_size: int, first_class: int) -> Dict[int, int]:
+    """Make sub-transition matrix of current subclass group for CIFAR-10 asymmetric label noise.
+
+    Args:
+        subclass_size (int): Number of subclasses
+        first_class (int): Index for the first class for the current subclass group.
+
+    Returns:
+        Dict[int, int]: Sub-transition matrix for the current subclass group.
+    """
+    sub_trans_mat = {}
+    for i in range(subclass_size - 1):
+        sub_trans_mat[first_class + i] = first_class + i + 1
+    sub_trans_mat[first_class + subclass_size - 1] = first_class
+    return sub_trans_mat
+
+def build_cifar10_transmat() -> Dict[int, int]:
+    nb_classes = 10
+    nb_superclasses = 2  # CIFAR-10 has 2 superclasses
+    nb_subclasses = 5   # Assuming each superclass has 5 subclasses
+    trans_mat = dict()
+    for i in range(nb_superclasses):
+        init, end = i * nb_subclasses, (i + 1) * nb_subclasses
+        sub_trans_mat = subclasses_transmat(nb_subclasses, init)
+        trans_mat.update(sub_trans_mat)
+    return trans_mat
+
 def asymmetric_label_flipping(
     labels: List[int],
     noise_ratio: float = 0.1,
@@ -141,7 +168,7 @@ def add_noise(args, y_train, dict_users):
             noisy_labels = asymmetric_label_flipping(
                 y_train[sample_idx], 
                 noise_ratio=gamma_c[i],
-                transition_matrix=args.transition_matrix
+                transition_matrix=build_cifar10_transmat()
             )
             y_train_noisy[noisy_idx] = noisy_labels
 
