@@ -55,10 +55,22 @@ if __name__ == '__main__':
     dataset_train.targets = y_train_noisy
 
     # --------------------- Client dataset before and after adding noise ---------------------------
-    print("printing test y_train : ", y_train)
+    
+    def noise_difference(list1, list2):
+        # Ensure both lists have the same length
+        if len(list1) != len(list2):
+            return "Lists must have the same length"
 
-    print("printing test y_train_noisy : ", y_train_noisy)
-
+        result = []
+        for item1, item2 in zip(list1, list2):
+            if item1 == item2:
+                result.append(0)
+            else:
+                result.append(1)
+        return result
+    
+    noise_diff = noise_difference(y_train,y_train_noisy)
+    print(noise_diff)
 
     # --------------------- Build Models ---------------------------
     netglob = build_model(args)
