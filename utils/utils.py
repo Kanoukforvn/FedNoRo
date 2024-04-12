@@ -18,6 +18,28 @@ import numpy as np
 import pandas as pd
 import copy
 import logging
+from typing import List, Dict
+
+def asymmetric_label_flipping(
+    labels: List[int],
+    noise_ratio: float = 0.1,
+    transition_matrix: Dict[int, int] = None,
+) -> List[int]:
+    """Asymmetric label flipping using a transition matrix."""
+    sample_num = len(labels)
+    idxs = list(range(sample_num))
+    random.shuffle(idxs)
+    num_noise = int(sample_num * noise_ratio)
+    noisy_idxs = idxs[:num_noise]  # indices of candidate noisy sample
+    noisy_labels = []
+
+    for i in range(sample_num):
+        if i in noisy_idxs:
+            noisy_labels.append(transition_matrix[labels[i]])
+        else:
+            noisy_labels.append(labels[i])
+
+    return noisy_labels
 
 def add_noise(args, y_train, dict_users):
     np.random.seed(args.seed)
@@ -109,6 +131,25 @@ def add_noise(args, y_train, dict_users):
                 i, gamma_c[i], noise_ratio))
             real_noise_level[i] = noise_ratio
 
+
+    elif args.n_type == "asymmetric_v2":
+        real_noise_level = np.zeros(args.num_users)
+        for i in np.where(gamma_c > 0)[0]:
+            sample_idx = np.array(list(dict_users[i]))
+            num_noise = int(len(sample_idx) * gamma_c[i])
+            noisy_idx = np.random.choice(sample_idx, size=num_noise, replace=False)
+            noisy_labels = asymmetric_label_flipping(
+                y_train[sample_idx], 
+                noise_ratio=gamma_c[i],
+                transition_matrix=args.transition_matrix
+            )
+            y_train_noisy[noisy_idx] = noisy_labels
+
+            noise_ratio = np.mean(
+                y_train[sample_idx] != y_train_noisy[sample_idx])
+            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
+                i, gamma_c[i], noise_ratio))
+            real_noise_level[i] = noise_ratio
 
     elif args.n_type == "symmetric":  # Add symmetric noise here
         real_noise_level = np.zeros(args.num_users)
