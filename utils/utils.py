@@ -163,21 +163,23 @@ def add_noise(args, y_train, dict_users):
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
             sample_idx = np.array(list(dict_users[i]))
-            num_noise = int(len(sample_idx) * gamma_c[i])
-        
+
             # Ensure sample_idx does not exceed the size of y_train
             if len(sample_idx) > len(y_train):
                 sample_idx = np.random.choice(y_train, size=len(y_train), replace=False)
-        
-            noisy_idx = np.random.choice(sample_idx, size=num_noise, replace=True)
-        
+
+            num_noise = min(int(len(sample_idx) * gamma_c[i]), len(sample_idx))  # Ensure num_noise is within bounds
+
+            # Randomly select indices for noisy samples
+            noisy_idx = np.random.choice(len(sample_idx), size=num_noise, replace=False)
+
             # Generate noisy labels only for noisy samples
             noisy_labels = asymmetric_label_flipping(
                 y_train[sample_idx[noisy_idx]], 
                 noise_ratio=gamma_c[i],
                 transition_matrix=build_cifar10_transmat()
             )
-        
+
             # Update y_train_noisy with the noisy labels
             for idx, label in zip(noisy_idx, noisy_labels):
                 y_train_noisy[sample_idx[idx]] = label
@@ -187,6 +189,7 @@ def add_noise(args, y_train, dict_users):
             logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
                 i, gamma_c[i], noise_ratio))
             real_noise_level[i] = noise_ratio
+
 
     elif args.n_type == "symmetric":  # Add symmetric noise here
         real_noise_level = np.zeros(args.num_users)
