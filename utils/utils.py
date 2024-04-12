@@ -100,7 +100,7 @@ def add_noise(args, y_train, dict_users):
             p_f = p_f / p_f.sum()
             # Choose noisy samples based on the misclassification probability.
             noisy_idx = np.random.choice(np.arange(len(sample_idx)), size=int(
-                gamma_c[i] * len(sample_idx)), replace=False, p=p_f)
+                gamma_c[i] * len(sample_idx)), replace=True, p=p_f)
 
             for j in noisy_idx:
                 soft_label_this_client[j][hard_label_this_client[j]] = 0.
