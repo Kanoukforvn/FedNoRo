@@ -166,12 +166,14 @@ def add_noise(args, y_train, dict_users):
             num_noise = int(len(sample_idx) * gamma_c[i])
             noisy_idx = np.random.choice(sample_idx, size=num_noise, replace=False)
             noisy_labels = asymmetric_label_flipping(
-                y_train[sample_idx], 
-                noise_ratio=gamma_c[i],
-                transition_matrix=build_cifar10_transmat()
-            )
-            y_train_noisy[noisy_idx] = noisy_labels
-
+            y_train[sample_idx[noisy_idx]], 
+            noise_ratio=gamma_c[i],
+            transition_matrix=build_cifar10_transmat()
+        )
+        
+        # Update y_train_noisy with the noisy labels
+        for idx, label in zip(noisy_idx, noisy_labels):
+            y_train_noisy[sample_idx[idx]] = label
             noise_ratio = np.mean(
                 y_train[sample_idx] != y_train_noisy[sample_idx])
             logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
