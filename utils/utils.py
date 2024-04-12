@@ -131,34 +131,6 @@ def add_noise(args, y_train, dict_users):
                 i, gamma_c[i], gamma_c[i] * 0.9, noise_ratio))
             real_noise_level[i] = noise_ratio
 
-
-    elif args.n_type == "asymmetric":
-        real_noise_level = np.zeros(args.num_users)
-        for i in np.where(gamma_c > 0)[0]:
-            sample_idx = np.array(list(dict_users[i]))
-            soft_label_this_client = np.ones((len(sample_idx), args.n_classes)) * \
-                                     (1 / args.n_classes)  # Initializing with uniform distribution
-
-            # asymmetric noise
-            for j in range(len(sample_idx)):
-                # Choose a noisy label based on the misclassification probability.
-                label_prob = np.ones(args.n_classes) * 0.1
-                label_prob[y_train[sample_idx[j]]] = 0.9
-                label_prob /= label_prob.sum() 
-                noisy_label = np.random.choice(np.arange(args.n_classes), p=label_prob)
-                soft_label_this_client[j][noisy_label] = 0.
-                soft_label_this_client[j] = soft_label_this_client[j] / \
-                                            soft_label_this_client[j].sum()
-                y_train_noisy[sample_idx[j]] = np.random.choice(
-                    np.arange(args.n_classes), p=soft_label_this_client[j])
-
-            noise_ratio = np.mean(
-                y_train[sample_idx] != y_train_noisy[sample_idx])
-            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
-                i, gamma_c[i], noise_ratio))
-            real_noise_level[i] = noise_ratio
-
-
     elif args.n_type == "asymmetric_v2":
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
