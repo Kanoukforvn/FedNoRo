@@ -90,12 +90,12 @@ def add_noise(args, y_train, dict_users):
             soft_label_this_client = np.ones((len(sample_idx), args.n_classes)) * \
                                      (1 / args.n_classes)  # Initializing with uniform distribution
 
-            # Introducing asymmetric noise
+            # asymmetric noise
             for j in range(len(sample_idx)):
                 # Choose a noisy label based on the misclassification probability.
                 label_prob = np.ones(args.n_classes) * 0.1
                 label_prob[y_train[sample_idx[j]]] = 0.9
-                label_prob /= label_prob.sum()  # Ensure probabilities sum to 1
+                label_prob /= label_prob.sum() 
                 noisy_label = np.random.choice(np.arange(args.n_classes), p=label_prob)
                 soft_label_this_client[j][noisy_label] = 0.
                 soft_label_this_client[j] = soft_label_this_client[j] / \
