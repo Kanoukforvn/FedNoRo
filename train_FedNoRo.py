@@ -48,10 +48,17 @@ if __name__ == '__main__':
     logging.info(
         f"test: {Counter(dataset_test.targets)}, total: {len(dataset_test.targets)}")
 
+
     # --------------------- Add Noise ---------------------------
     y_train = np.array(dataset_train.targets)
     y_train_noisy, gamma_s, real_noise_level = add_noise(args, y_train, dict_users)
     dataset_train.targets = y_train_noisy
+
+    # --------------------- Client dataset before and after adding noise ---------------------------
+    print("printing test y_train : ", y_train)
+
+    print("printing test y_train_noisy : ", y_train_noisy)
+
 
     # --------------------- Build Models ---------------------------
     netglob = build_model(args)
