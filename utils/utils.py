@@ -243,13 +243,14 @@ def set_output_files(args):
     writer = SummaryWriter(tensorboard_dir)
     return writer, models_dir
 
-def check_noise_type(labels, noisy_labels):
+def check_noise_type(labels, noisy_labels, tolerance=0.05):
     """
     Check if the correct type of noise has been generated.
     
     Args:
     - labels (numpy array): Array of original labels.
     - noisy_labels (numpy array): Array of labels after adding noise.
+    - tolerance (float): Tolerance threshold for considering noise symmetric.
     
     Returns:
     - str: Type of noise detected ("symmetric", "asymmetric", or "unknown").
@@ -262,12 +263,12 @@ def check_noise_type(labels, noisy_labels):
     noisy_label_counts = np.bincount(noisy_labels)
     label_mismatch_proportion = np.abs(label_counts - noisy_label_counts) / len(labels)
     
-    # Check if all label mismatches are of equal proportion
-    if np.all(label_mismatch_proportion == label_mismatch_proportion[0]):
+    # Check if all label mismatches are within the tolerance threshold
+    if np.all(label_mismatch_proportion <= tolerance):
         return "symmetric"
     
-    # Check if there are label mismatches of varying proportions
-    elif np.any(label_mismatch_proportion != label_mismatch_proportion[0]):
+    # Check if there are label mismatches beyond the tolerance threshold
+    elif np.any(label_mismatch_proportion > tolerance):
         return "asymmetric"
     
     # If neither symmetric nor asymmetric, return "unknown"
