@@ -254,21 +254,22 @@ def check_noise_type(labels, noisy_labels):
     Returns:
     - str: Type of noise detected ("symmetric", "asymmetric", or "unknown").
     """
-    # Count occurrences of each label in original and noisy labels
+    # Calculate the total number of label mismatches between original and noisy labels
+    total_mismatches = np.sum(labels != noisy_labels)
+    
+    # Calculate the proportion of mismatches for each label
     label_counts = np.bincount(labels)
     noisy_label_counts = np.bincount(noisy_labels)
+    label_mismatch_proportion = np.abs(label_counts - noisy_label_counts) / len(labels)
     
-    # Calculate the absolute difference between label counts
-    diff = np.abs(label_counts - noisy_label_counts)
-    
-    # If the sum of differences is zero, it indicates symmetric noise
-    if np.sum(diff) == 0:
+    # Check if all label mismatches are of equal proportion
+    if np.all(label_mismatch_proportion == label_mismatch_proportion[0]):
         return "symmetric"
     
-    # If the sum of differences is equal to the maximum difference, it indicates asymmetric noise
-    elif np.sum(diff) == np.max(diff):
+    # Check if there are label mismatches of varying proportions
+    elif np.any(label_mismatch_proportion != label_mismatch_proportion[0]):
         return "asymmetric"
     
-    # Otherwise, it's uncertain
+    # If neither symmetric nor asymmetric, return "unknown"
     else:
         return "unknown"
