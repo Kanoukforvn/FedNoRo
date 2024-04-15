@@ -259,9 +259,9 @@ def identify_noise_type(labels, noisy_labels):
     mismatch_proportion = mismatch_count / total_samples
 
     # Debug logging to inspect label mismatch proportions
-    logging.debug("Mismatch count:", mismatch_count)
-    logging.debug("Total samples:", total_samples)
-    logging.debug("Mismatch proportion:", mismatch_proportion)
+    logging.debug("Mismatch count: %d", mismatch_count)
+    logging.debug("Total samples: %d", total_samples)
+    logging.debug("Mismatch proportion: %.4f", mismatch_proportion)
 
     # Classify noise type based on label mismatch proportions
     if mismatch_proportion == 0:
@@ -274,6 +274,6 @@ def identify_noise_type(labels, noisy_labels):
         noise_type = "unknown"
 
     # Info logging to report detected noise type
-    logging.info("Detected noise type:", noise_type)
+    logging.info("Detected noise type: %s", noise_type)
 
     return noise_type
