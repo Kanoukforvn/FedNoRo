@@ -253,25 +253,22 @@ def identify_noise_type(labels, noisy_labels):
     Returns:
     - str: Type of noise detected ("symmetric", "random", "asymmetric", or "unknown").
     """
-    # Calculate the proportion of mismatches for each label
-    mismatch_count = np.sum(labels != noisy_labels)
-    total_samples = len(labels)
-    mismatch_proportion = mismatch_count / total_samples
-
-    # Debug logging to inspect label mismatch proportions
-    logging.debug("Mismatch count: %d", mismatch_count)
-    logging.debug("Total samples: %d", total_samples)
-    logging.debug("Mismatch proportion: %.4f", mismatch_proportion)
-
-    # Classify noise type based on label mismatch proportions
-    if mismatch_proportion == 0:
+    # Check if the labels are identical
+    if np.array_equal(labels, noisy_labels):
         noise_type = "symmetric"
-    elif 0 < mismatch_proportion < 1:
-        noise_type = "random"
-    elif mismatch_proportion == 1:
-        noise_type = "asymmetric"
     else:
-        noise_type = "unknown"
+        # Count the number of mismatches
+        mismatch_count = np.sum(labels != noisy_labels)
+        total_samples = len(labels)
+        mismatch_proportion = mismatch_count / total_samples
+
+        # Classify noise type based on label mismatch proportions
+        if mismatch_proportion == 0:
+            noise_type = "symmetric"
+        elif mismatch_proportion == 1:
+            noise_type = "asymmetric"
+        else:
+            noise_type = "random"
 
     # Info logging to report detected noise type
     logging.info("Detected noise type: %s", noise_type)

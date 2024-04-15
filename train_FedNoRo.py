@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     # --------------------- Client dataset before and after adding noise ---------------------------
     
-    print(identify_noise_type(y_train, y_train_noisy))
+    identify_noise_type(y_train, y_train_noisy)
 
     # --------------------- Build Models ---------------------------
     netglob = build_model(args)
