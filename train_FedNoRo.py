@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from utils.options import args_parser
 from utils.local_training import LocalUpdate, globaltest
 from utils.FedAvg import FedAvg, DaAgg
-from utils.utils import add_noise, set_seed, set_output_files, get_output, get_current_consistency_weight
+from utils.utils import add_noise, set_seed, set_output_files, get_output, get_current_consistency_weight, get_class_data_before_after_noise
 
 from dataset.dataset import get_dataset
 from model.build_model import build_model
@@ -56,21 +56,10 @@ if __name__ == '__main__':
 
     # --------------------- Client dataset before and after adding noise ---------------------------
     
-    def noise_difference(list1, list2):
-        # Ensure both lists have the same length
-        if len(list1) != len(list2):
-            return "Lists must have the same length"
+    class_data = get_class_data_before_after_noise(y_train,y_train_noisy,args.n_classes)
 
-        result = []
-        for item1, item2 in zip(list1, list2):
-            if item1 == item2:
-                result.append(0)
-            else:
-                result.append(1)
-        return result
-    
-    noise_diff = noise_difference(y_train,y_train_noisy)
-    print(noise_diff)
+    print("class data before and after adding noise")
+    print(class_data)
 
     # --------------------- Build Models ---------------------------
     netglob = build_model(args)

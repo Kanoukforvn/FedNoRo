@@ -305,3 +305,22 @@ def set_output_files(args):
     logging.info(str(args))
     writer = SummaryWriter(tensorboard_dir)
     return writer, models_dir
+
+def get_class_data_before_after_noise(original_labels, noisy_labels, num_classes):
+    class_data_matrix = np.zeros((num_classes, 2), dtype=int)
+
+    for class_label in range(num_classes):
+        # Get indices where original labels match the current class label
+        class_indices = np.where(original_labels == class_label)[0]
+        
+        # Extract corresponding labels after adding noise
+        noisy_class_labels = noisy_labels[class_indices]
+        
+        # Count occurrences of each label before and after adding noise
+        original_count = len(class_indices)
+        noisy_count = np.sum(noisy_class_labels == class_label)
+        
+        # Populate the matrix
+        class_data_matrix[class_label] = [original_count, noisy_count]
+    
+    return class_data_matrix
