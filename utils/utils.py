@@ -123,7 +123,6 @@ def add_noise(args, y_train, dict_users):
 
     return y_train_noisy, gamma_s, real_noise_level
 
-
 def sigmoid_rampup(current, begin, end):
     """Exponential rampup from https://arxiv.org/abs/1610.02242"""
     current = np.clip(current, begin, end)
@@ -243,33 +242,28 @@ def set_output_files(args):
     writer = SummaryWriter(tensorboard_dir)
     return writer, models_dir
 
-def check_noise_type(labels, noisy_labels):
+def identify_noise_type(labels, noisy_labels):
     """
-    Check the type of noise based on label mismatch proportions.
+    Identify the type of noise based on label comparison.
 
     Args:
     - labels (numpy array): Array of original labels.
     - noisy_labels (numpy array): Array of labels after adding noise.
 
     Returns:
-    - str: Type of noise detected ("symmetric", "random", "asymmetric", or "unknown").
+    - str: Type of noise detected ("symmetric", "asymmetric", or "unknown").
     """
-    # Calculate the proportion of mismatches for each label
-    mismatch_count = np.sum(labels != noisy_labels)
+    # Check if the noise is symmetric or asymmetric
+    # Count the number of label changes
+    label_changes = np.sum(labels != noisy_labels)
     total_samples = len(labels)
-    mismatch_proportion = mismatch_count / total_samples
 
-    # Debug logging to inspect label mismatch proportions
-    print("Mismatch count:", mismatch_count)
-    print("Total samples:", total_samples)
-    print("Mismatch proportion:", mismatch_proportion)
-
-    # Classify noise type based on label mismatch proportions
-    if mismatch_proportion == 0:
-        return "symmetric"
-    elif 0 < mismatch_proportion < 1:
-        return "random"
-    elif mismatch_proportion == 1:
+    # If all labels have changed, it's likely asymmetric noise
+    if label_changes == total_samples:
         return "asymmetric"
+    # If some labels have changed, it's likely symmetric noise
+    elif label_changes > 0:
+        return "symmetric"
+    # If no labels have changed, it's likely not noise or unknown type
     else:
         return "unknown"

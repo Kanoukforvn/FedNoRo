@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from utils.options import args_parser
 from utils.local_training import LocalUpdate, globaltest
 from utils.FedAvg import FedAvg, DaAgg
-from utils.utils import add_noise, set_seed, set_output_files, get_output, get_current_consistency_weight, check_noise_type
+from utils.utils import add_noise, set_seed, set_output_files, get_output, get_current_consistency_weight, identify_noise_type
 
 from dataset.dataset import get_dataset
 from model.build_model import build_model
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     # --------------------- Client dataset before and after adding noise ---------------------------
     
-    print(check_noise_type(y_train, y_train_noisy))
+    print(identify_noise_type(y_train, y_train_noisy))
 
     # --------------------- Build Models ---------------------------
     netglob = build_model(args)
