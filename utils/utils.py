@@ -306,36 +306,32 @@ def set_output_files(args):
     writer = SummaryWriter(tensorboard_dir)
     return writer, models_dir
 
-def get_class_data_before_after_noise(original_labels, noisy_labels, num_classes):
-    class_data_matrix = np.zeros((num_classes, 2), dtype=int)
-
-    for class_label in range(num_classes):
-        # Get indices where original labels match the current class label
-        class_indices = np.where(original_labels == class_label)[0]
-        
-        # Extract corresponding labels after adding noise
-        noisy_class_labels = noisy_labels[class_indices]
-        
-        # Count occurrences of each label before and after adding noise
-        original_count = len(class_indices)
-        noisy_count = np.sum(noisy_class_labels == class_label)
-        
-        # Populate the matrix
-        class_data_matrix[class_label] = [original_count, noisy_count]
+def check_noise_type(labels, noisy_labels):
+    """
+    Check if the correct type of noise has been generated.
     
-    return class_data_matrix
-
-def analyze_noise(labels, noisy_labels, num_classes):
-    class_data_before = get_class_data_before_after_noise(labels, labels, num_classes)
-    class_data_after = get_class_data_before_after_noise(labels, noisy_labels, num_classes)
-
-    # Compute differences between original and noisy counts
-    differences = class_data_after - class_data_before
+    Args:
+    - labels (numpy array): Array of original labels.
+    - noisy_labels (numpy array): Array of labels after adding noise.
     
-    # Check for asymmetry
-    asymmetry_score = np.sum(np.abs(differences))
+    Returns:
+    - str: Type of noise detected ("symmetric", "asymmetric", or "unknown").
+    """
+    # Count occurrences of each label in original and noisy labels
+    label_counts = np.bincount(labels)
+    noisy_label_counts = np.bincount(noisy_labels)
     
-    # Check for symmetry
-    symmetry_score = np.sum(np.square(differences))
+    # Calculate the absolute difference between label counts
+    diff = np.abs(label_counts - noisy_label_counts)
     
-    return asymmetry_score, symmetry_score
+    # If the sum of differences is zero, it indicates symmetric noise
+    if np.sum(diff) == 0:
+        return "symmetric"
+    
+    # If the sum of differences is equal to the maximum difference, it indicates asymmetric noise
+    elif np.sum(diff) == np.max(diff):
+        return "asymmetric"
+    
+    # Otherwise, it's uncertain
+    else:
+        return "unknown"
