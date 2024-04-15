@@ -259,13 +259,16 @@ def check_noise_type(labels, noisy_labels):
     total_samples = len(labels)
     mismatch_proportion = mismatch_count / total_samples
 
-    # Check for symmetric noise
+    # Debug logging to inspect label mismatch proportions
+    print("Mismatch count:", mismatch_count)
+    print("Total samples:", total_samples)
+    print("Mismatch proportion:", mismatch_proportion)
+
+    # Classify noise type based on label mismatch proportions
     if mismatch_proportion == 0:
         return "symmetric"
-    # Check for random noise
-    elif mismatch_proportion > 0 and mismatch_proportion < 1:
+    elif 0 < mismatch_proportion < 1:
         return "random"
-    # Check for asymmetric noise
     elif mismatch_proportion == 1:
         return "asymmetric"
     else:
