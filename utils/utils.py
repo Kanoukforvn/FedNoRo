@@ -103,21 +103,21 @@ def add_noise(args, y_train, dict_users):
             real_noise_level[i] = noise_ratio
 
     elif args.n_type == "asymmetric":
-        # Add asymmetric noise
+        # Increase the amount of asymmetric noise
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
             sample_idx = np.array(list(dict_users[i]))
             noise_ratio = gamma_c[i]
+
             noisy_samples = np.random.choice(sample_idx, size=int(noise_ratio * len(sample_idx)), replace=False)
             for idx in noisy_samples:
-                # Randomly choose a different label for noisy samples
                 new_label = np.random.choice(np.delete(np.arange(args.n_classes), y_train[idx]))
                 y_train_noisy[idx] = new_label
+
             noise_ratio = np.mean(y_train[sample_idx] != y_train_noisy[sample_idx])
             logging.info("Client %d, asymmetric noise level: %.4f, real noise ratio: %.4f" % (
                 i, gamma_c[i], noise_ratio))
             real_noise_level[i] = noise_ratio
-
     else:
         raise NotImplementedError("Invalid noise type")
 
@@ -243,37 +243,30 @@ def set_output_files(args):
     writer = SummaryWriter(tensorboard_dir)
     return writer, models_dir
 
-def check_noise_type(labels, noisy_labels, tolerance=0.05):
+def check_noise_type(labels, noisy_labels):
     """
-    Check if the correct type of noise has been generated.
-    
+    Check the type of noise based on label mismatch proportions.
+
     Args:
     - labels (numpy array): Array of original labels.
     - noisy_labels (numpy array): Array of labels after adding noise.
-    - tolerance (float): Tolerance threshold for considering noise symmetric.
-    
+
     Returns:
-    - str: Type of noise detected ("symmetric", "asymmetric", or "unknown").
+    - str: Type of noise detected ("symmetric", "random", "asymmetric", or "unknown").
     """
-    # Calculate the total number of label mismatches between original and noisy labels
-    total_mismatches = np.sum(labels != noisy_labels)
-    
     # Calculate the proportion of mismatches for each label
-    label_counts = np.bincount(labels)
-    noisy_label_counts = np.bincount(noisy_labels)
-    label_mismatch_proportion = np.abs(label_counts - noisy_label_counts) / len(labels)
-    
-    # Debug logging to inspect label mismatch proportions
-    print("Label mismatch proportions:", label_mismatch_proportion)
-    
-    # Check if all label mismatches are within the tolerance threshold
-    if np.all(label_mismatch_proportion <= tolerance):
+    mismatch_count = np.sum(labels != noisy_labels)
+    total_samples = len(labels)
+    mismatch_proportion = mismatch_count / total_samples
+
+    # Check for symmetric noise
+    if mismatch_proportion == 0:
         return "symmetric"
-    
-    # Check if there are label mismatches beyond the tolerance threshold
-    elif np.any(label_mismatch_proportion > tolerance):
+    # Check for random noise
+    elif mismatch_proportion > 0 and mismatch_proportion < 1:
+        return "random"
+    # Check for asymmetric noise
+    elif mismatch_proportion == 1:
         return "asymmetric"
-    
-    # If neither symmetric nor asymmetric, return "unknown"
     else:
         return "unknown"
