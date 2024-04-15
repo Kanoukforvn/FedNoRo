@@ -324,3 +324,18 @@ def get_class_data_before_after_noise(original_labels, noisy_labels, num_classes
         class_data_matrix[class_label] = [original_count, noisy_count]
     
     return class_data_matrix
+
+def analyze_noise(labels, noisy_labels, num_classes):
+    class_data_before = get_class_data_before_after_noise(labels, labels, num_classes)
+    class_data_after = get_class_data_before_after_noise(labels, noisy_labels, num_classes)
+
+    # Compute differences between original and noisy counts
+    differences = class_data_after - class_data_before
+    
+    # Check for asymmetry
+    asymmetry_score = np.sum(np.abs(differences))
+    
+    # Check for symmetry
+    symmetry_score = np.sum(np.square(differences))
+    
+    return asymmetry_score, symmetry_score

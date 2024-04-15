@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from utils.options import args_parser
 from utils.local_training import LocalUpdate, globaltest
 from utils.FedAvg import FedAvg, DaAgg
-from utils.utils import add_noise, set_seed, set_output_files, get_output, get_current_consistency_weight, get_class_data_before_after_noise
+from utils.utils import add_noise, set_seed, set_output_files, get_output, get_current_consistency_weight, get_class_data_before_after_noise, analyze_noise
 
 from dataset.dataset import get_dataset
 from model.build_model import build_model
@@ -60,6 +60,11 @@ if __name__ == '__main__':
 
     print("class data before and after adding noise")
     print(class_data)
+
+    
+    asymmetry_score, symmetry_score = analyze_noise(y_train, y_train_noisy, args.n_classes)
+    print("Asymmetry Score:", asymmetry_score)
+    print("Symmetry Score:", symmetry_score)
 
     # --------------------- Build Models ---------------------------
     netglob = build_model(args)
