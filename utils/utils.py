@@ -20,53 +20,10 @@ import copy
 import logging
 from typing import List, Dict
 
-def subclasses_transmat(subclass_size: int, first_class: int) -> Dict[int, int]:
-    """Make sub-transition matrix of current subclass group for CIFAR-10 asymmetric label noise.
-
-    Args:
-        subclass_size (int): Number of subclasses
-        first_class (int): Index for the first class for the current subclass group.
-
-    Returns:
-        Dict[int, int]: Sub-transition matrix for the current subclass group.
-    """
-    sub_trans_mat = {}
-    for i in range(subclass_size - 1):
-        sub_trans_mat[first_class + i] = first_class + i + 1
-    sub_trans_mat[first_class + subclass_size - 1] = first_class
-    return sub_trans_mat
-
-def build_cifar10_transmat() -> Dict[int, int]:
-    nb_classes = 10
-    nb_superclasses = 2  # CIFAR-10 has 2 superclasses
-    nb_subclasses = 5   # Assuming each superclass has 5 subclasses
-    trans_mat = dict()
-    for i in range(nb_superclasses):
-        init, end = i * nb_subclasses, (i + 1) * nb_subclasses
-        sub_trans_mat = subclasses_transmat(nb_subclasses, init)
-        trans_mat.update(sub_trans_mat)
-    return trans_mat
-
-def asymmetric_label_flipping(
-    labels: List[int],
-    noise_ratio: float = 0.1,
-    transition_matrix: Dict[int, int] = None,
-) -> List[int]:
-    """Asymmetric label flipping using a transition matrix."""
-    sample_num = len(labels)
-    idxs = list(range(sample_num))
-    random.shuffle(idxs)
-    num_noise = int(sample_num * noise_ratio)
-    noisy_idxs = idxs[:num_noise]  # indices of candidate noisy sample
-    noisy_labels = []
-
-    for i in range(sample_num):
-        if i in noisy_idxs:
-            noisy_labels.append(transition_matrix[labels[i]])
-        else:
-            noisy_labels.append(labels[i])
-
-    return noisy_labels
+import numpy as np
+import pandas as pd
+import copy
+import logging
 
 def add_noise(args, y_train, dict_users):
     np.random.seed(args.seed)
@@ -85,7 +42,7 @@ def add_noise(args, y_train, dict_users):
         elif args.dataset == "ICH":
             df = pd.read_csv("your csv")
         else:
-            raise
+            raise ValueError("Invalid dataset name")
 
         soft_label = df.iloc[:, 1:args.n_classes + 1].values.astype("float")
         real_noise_level = np.zeros(args.num_users)
@@ -131,58 +88,38 @@ def add_noise(args, y_train, dict_users):
                 i, gamma_c[i], gamma_c[i] * 0.9, noise_ratio))
             real_noise_level[i] = noise_ratio
 
-    elif args.n_type == "asymmetric_v2":
+    elif args.n_type == "symmetric":
+        # Add symmetric noise
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
             sample_idx = np.array(list(dict_users[i]))
-
-            # Ensure sample_idx does not exceed the size of y_train
-            if len(sample_idx) > len(y_train):
-                sample_idx = np.random.choice(y_train, size=len(y_train), replace=False)
-
-            num_noise = min(int(len(sample_idx) * gamma_c[i]), len(sample_idx))  # Ensure num_noise is within bounds
-
-            # Randomly select indices for noisy samples
-            noisy_idx = np.random.choice(len(sample_idx), size=num_noise, replace=False)
-
-            # Generate noisy labels only for noisy samples
-            noisy_labels = asymmetric_label_flipping(
-                y_train[sample_idx[noisy_idx]], 
-                noise_ratio=gamma_c[i],
-                transition_matrix=build_cifar10_transmat()
-            )
-
-            # Update y_train_noisy with the noisy labels
-            for idx, label in zip(noisy_idx, noisy_labels):
-                y_train_noisy[sample_idx[idx]] = label
-
-            noise_ratio = np.mean(
-                y_train[sample_idx] != y_train_noisy[sample_idx])
-            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
+            noise_ratio = gamma_c[i]
+            noisy_samples = np.random.choice(sample_idx, size=int(noise_ratio * len(sample_idx)), replace=False)
+            for idx in noisy_samples:
+                y_train_noisy[idx] = np.random.randint(0, args.n_classes)
+            noise_ratio = np.mean(y_train[sample_idx] != y_train_noisy[sample_idx])
+            logging.info("Client %d, symmetric noise level: %.4f, real noise ratio: %.4f" % (
                 i, gamma_c[i], noise_ratio))
             real_noise_level[i] = noise_ratio
 
-
-    elif args.n_type == "symmetric":  # Add symmetric noise here
+    elif args.n_type == "asymmetric":
+        # Add asymmetric noise
         real_noise_level = np.zeros(args.num_users)
         for i in np.where(gamma_c > 0)[0]:
             sample_idx = np.array(list(dict_users[i]))
-            prob = np.random.rand(len(sample_idx))
-            noisy_idx = np.where(prob <= gamma_c[i])[0]
-            # Introduce symmetric noise by flipping labels randomly
-            for idx in noisy_idx:
-                correct_label = y_train[sample_idx[idx]]
-                other_labels = np.delete(np.arange(args.n_classes), correct_label)
-                noisy_label = np.random.choice(other_labels)
-                y_train_noisy[sample_idx[idx]] = noisy_label
-            noise_ratio = np.mean(
-                y_train[sample_idx] != y_train_noisy[sample_idx])
-            logging.info("Client %d, noise level: %.4f, real noise ratio: %.4f" % (
+            noise_ratio = gamma_c[i]
+            noisy_samples = np.random.choice(sample_idx, size=int(noise_ratio * len(sample_idx)), replace=False)
+            for idx in noisy_samples:
+                # Randomly choose a different label for noisy samples
+                new_label = np.random.choice(np.delete(np.arange(args.n_classes), y_train[idx]))
+                y_train_noisy[idx] = new_label
+            noise_ratio = np.mean(y_train[sample_idx] != y_train_noisy[sample_idx])
+            logging.info("Client %d, asymmetric noise level: %.4f, real noise ratio: %.4f" % (
                 i, gamma_c[i], noise_ratio))
             real_noise_level[i] = noise_ratio
 
     else:
-        raise NotImplementedError
+        raise NotImplementedError("Invalid noise type")
 
     return y_train_noisy, gamma_s, real_noise_level
 
