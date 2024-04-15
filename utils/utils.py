@@ -263,6 +263,9 @@ def check_noise_type(labels, noisy_labels, tolerance=0.05):
     noisy_label_counts = np.bincount(noisy_labels)
     label_mismatch_proportion = np.abs(label_counts - noisy_label_counts) / len(labels)
     
+    # Debug logging to inspect label mismatch proportions
+    print("Label mismatch proportions:", label_mismatch_proportion)
+    
     # Check if all label mismatches are within the tolerance threshold
     if np.all(label_mismatch_proportion <= tolerance):
         return "symmetric"
