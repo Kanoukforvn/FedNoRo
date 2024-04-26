@@ -48,8 +48,8 @@ class LocalUpdate(object):
         self.idxs = idxs
         self.local_dataset = DatasetSplit(dataset, idxs)
         self.class_num_list = self.local_dataset.get_num_of_each_class(self.args)
-        # logging.info(
-        #     f'client{id} each class num: {self.class_num_list}, total: {len(self.local_dataset)}')
+        logging.info(
+            f'client{id} each class num: {self.class_num_list}, total: {len(self.local_dataset)}')
         self.ldr_train = DataLoader(
             self.local_dataset, batch_size=self.args.batch_size, shuffle=True, 
             num_workers=2, drop_last=True)
