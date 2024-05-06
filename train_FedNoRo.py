@@ -113,7 +113,7 @@ if __name__ == '__main__':
     logging.info(
         f"********************** load model from: {model_path} **********************")
     netglob.load_state_dict(torch.load(model_path))
-    loader = DataLoader(dataset=dataset_train, batch_size=32,
+    loader = DataLoader(dataset=dataset_train, batch_size=128,
                         shuffle=False, num_workers=4)
     criterion = nn.CrossEntropyLoss(reduction='none')
     local_output, loss = get_output(
