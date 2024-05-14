@@ -78,6 +78,7 @@ class LocalUpdate(object):
                 logits = net(images)
                 loss = ce_criterion(logits, labels)
 
+                loss = loss.float()
                 loss.backward()
                 self.optimizer.step()
 
