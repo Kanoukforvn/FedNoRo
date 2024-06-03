@@ -11,6 +11,7 @@ import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 from utils.options import args_parser
 from utils.local_training import LocalUpdate, globaltest
@@ -148,6 +149,31 @@ if __name__ == '__main__':
     for i in vote:
         cnt.append(vote.count(i))
     noisy_clients = list(vote[cnt.index(max(cnt))])
+
+
+    # Plotting the noisy and clean clusters
+    plt.figure(figsize=(10, 8))
+
+    # Create a boolean array indicating noisy clients
+    is_noisy = np.zeros(metrics.shape[0], dtype=bool)
+    is_noisy[noisy_clients] = True
+
+    # Plot noisy clients
+    plt.scatter(metrics[is_noisy, 0], metrics[is_noisy, 1], color='red', label='Noisy Clients', alpha=0.6)
+
+    # Plot clean clients
+    plt.scatter(metrics[~is_noisy, 0], metrics[~is_noisy, 1], color='blue', label='Clean Clients', alpha=0.6)
+
+    # Add client numbers
+    for i in range(metrics.shape[0]):
+        plt.text(metrics[i, 0], metrics[i, 1], str(i), fontsize=8, ha='right')
+
+    plt.title('Visualization of Noisy and Clean Clusters')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.legend()
+    plt.savefig('./noisy_clean_clusters.png')
+    plt.show()
 
     logging.info(
         f"selected noisy clients: {noisy_clients}, real noisy clients: {np.where(gamma_s>0.)[0]}")
